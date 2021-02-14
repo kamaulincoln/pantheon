@@ -54,7 +54,3 @@
 	path = third_party/fillp-sheep
 	url = https://github.com/fillthepipe/fillp-sheep.git
 	ignore = dirty
-[submodule "third_party/aurora"]
-	path = third_party/aurora
-	url = https://github.com/zxxia/PCC-Uspace
-	branch = deep-learning
