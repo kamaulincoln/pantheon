@@ -55,6 +55,10 @@ schemes:
     name: PCC-Expr
     color: olive
     marker: '<'
+  aurora:
+    name: PCC-Aurora
+    color: brown
+    marker: '<'
   fillp:
     name: FillP
     color: violet
