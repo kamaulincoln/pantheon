@@ -55,7 +55,7 @@ schemes:
     name: PCC-Expr
     color: olive
     marker: '<'
-  PCC-Aurora:
+  aurora:
     name: PCC-Aurora
     color: brown
     marker: '<'
