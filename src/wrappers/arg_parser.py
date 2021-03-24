@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 
 def parse_wrapper_args(run_first):
@@ -24,9 +25,17 @@ def parse_wrapper_args(run_first):
 
     if run_first == 'receiver':
         receiver_parser.add_argument('port', help='port to listen on')
+        receiver_parser.add_argument(
+            '--aurora-save-dir', type=str, default="",
+            help='directory to save Aurora\'s logs.')
         sender_parser.add_argument(
             'ip', metavar='IP', help='IP address of receiver')
         sender_parser.add_argument('port', help='port of receiver')
+        sender_parser.add_argument(
+            '--model-path', type=str, default="", help='path to Aurora models')
+        sender_parser.add_argument(
+            '--aurora-save-dir', type=str, default="",
+            help='directory to save Aurora\'s logs.')
     else:
         sender_parser.add_argument('port', help='port to listen on')
         receiver_parser.add_argument(

@@ -23,23 +23,36 @@ def main():
         return
 
     if args.option == 'setup':
+        check_call(['sudo', 'apt', '-y', 'install', 'python3-pip'])
+        check_call(['pip3', 'install', 'numpy'])
+        check_call(['pip3', 'install', 'tensorflow==1.14.0'])
         check_call(['make'], cwd=src_dir)
         return
 
     if args.option == 'receiver':
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         os.environ['LD_LIBRARY_PATH'] = path.join(lib_dir)
         cmd = [recv_src, 'recv', args.port]
-        check_call(cmd)
+        check_call(cmd,
+                   stdout=open(path.join(args.aurora_save_dir,
+                                         "server_stdout.log"), 'w', 1),
+                   stderr=open(path.join(args.aurora_save_dir,
+                                         "server_stderr.log"), "w", 1))
         return
 
     if args.option == 'sender':
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         os.environ['LD_LIBRARY_PATH'] = path.join(lib_dir)
         cmd = [send_src, 'send', args.ip, args.port,
+               path.join(args.aurora_save_dir, "client.log"),
                "--pcc-rate-control=python", "-pyhelper=loaded_client", # potential python version issue here
-               "-pypath=/path/to/pcc-rl/src/udt-plugins/testing/",
+               "-pypath=/home/zxxia/PCC-RL/src/udt-plugins/testing/",
                "--history-len=10", "--pcc-utility-calc=linear",
-               "--model-path=/path/to/your/model/"]
-        check_call(cmd)
+               "--model-path={}".format(args.model_path)]
+        check_call(cmd, stderr=open(path.join(args.aurora_save_dir,
+                                              "client_stderr.log"), 'w', 1))
         return
 
 

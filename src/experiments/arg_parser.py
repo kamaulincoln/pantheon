@@ -133,6 +133,11 @@ def parse_test_local(local):
         help='extra arguments to pass to mm-link when running locally. Note '
         'that uplink (downlink) always represents the link from sender to '
         'receiver (from receiver to sender)')
+    local.add_argument(
+        '--model-path', type=str, default="", help='path to Aurora models')
+    local.add_argument(
+        '--aurora-save-dir', type=str, default="",
+        help='directory to save Aurora\'s logs.')
 
 
 def parse_test_remote(remote):
