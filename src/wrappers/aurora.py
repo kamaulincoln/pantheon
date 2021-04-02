@@ -47,10 +47,12 @@ def main():
         os.environ['LD_LIBRARY_PATH'] = path.join(lib_dir)
         cmd = [send_src, 'send', args.ip, args.port,
                path.join(args.aurora_save_dir, "client.log"),
-               "--pcc-rate-control=python", "-pyhelper=loaded_client", # potential python version issue here
-               "-pypath=/home/zxxia/PCC-RL/src/udt-plugins/testing/",
+               "--pcc-rate-control=python",
+               "-pyhelper=udt_plugins.testing.loaded_client",
+               "-pypath=/home/zxxia/PCC-RL/src",
                "--history-len=10", "--pcc-utility-calc=linear",
-               "--model-path={}".format(args.model_path)]
+               "--model-path={}".format(args.model_path),
+               "--save-dir={}".format(args.aurora_save_dir)]
         check_call(cmd, stderr=open(path.join(args.aurora_save_dir,
                                               "client_stderr.log"), 'w', 1))
         return
