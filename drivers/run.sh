@@ -12,15 +12,21 @@ set -e
 #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10'" \
 #     --data-dir exp
 # src/analysis/analyze.py --data-dir exp
-src/experiments/test.py local --schemes "cubic" -t 30\
-    --uplink-trace tests/traces/2mbps --downlink-trace tests/traces/2mbps \
-    --prepend-mm-cmds "mm-delay 50 mm-loss uplink 0.00" \
-    --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10' --downlink-queue=droptail --downlink-queue-args='packets=10'" \
-    --data-dir test_aurora \
-    --model-path ./range0/model_to_serve_step_1504800 \
-    --aurora-save-dir test_aurora
-# python /home/zxxia/pantheon/src/analysis/plot.py --data-dir test_aurora/ --schemes "cubic aurora"
+
+# model_path=models/udr_4_dims_correct_recv_rate/range0/model_to_serve_step_1504800
+model_path=models/udr_4_dims_correct_recv_rate/range0/model_step_1504800.ckpt
+src/experiments/test.py local --schemes "aurora" -t 40 \
+    --uplink-trace tests/traces/2mbps --downlink-trace tests/traces/12mbps \
+    --prepend-mm-cmds "mm-delay 50 mm-loss uplink 0.0" \
+    --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10'" \
+    --data-dir test_aurora_new \
+    --model-path  ${model_path}\
+    --aurora-save-dir test_aurora_new
+# --downlink-queue=droptail --downlink-queue-args='packets=10'
+    # --model-path ./range0/model_to_serve_step_1504800 \
+python /home/zxxia/pantheon/src/analysis/plot.py --data-dir test_aurora_new/ --schemes "aurora"
 # python /home/zxxia/pantheon/src/analysis/report.py --data-dir exp/ --schemes "aurora cubic"
+pkill -9 iperf
 
 
 
