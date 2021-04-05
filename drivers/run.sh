@@ -20,11 +20,12 @@ src/experiments/test.py local --schemes "aurora" -t 40 \
     --prepend-mm-cmds "mm-delay 50 mm-loss uplink 0.0" \
     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10'" \
     --data-dir test_aurora_new \
-    --model-path  ${model_path}\
-    --aurora-save-dir test_aurora_new
+    --model-path  ${model_path} \
+    --aurora-save-dir test_aurora_new \
+    --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
 # --downlink-queue=droptail --downlink-queue-args='packets=10'
     # --model-path ./range0/model_to_serve_step_1504800 \
-python /home/zxxia/pantheon/src/analysis/plot.py --data-dir test_aurora_new/ --schemes "aurora"
+python src/analysis/plot.py --data-dir test_aurora_new/ --schemes "aurora"
 # python /home/zxxia/pantheon/src/analysis/report.py --data-dir exp/ --schemes "aurora cubic"
 pkill -9 iperf
 

@@ -23,9 +23,11 @@ def main():
         return
 
     if args.option == 'setup':
-        check_call(['sudo', 'apt', '-y', 'install', 'python3-pip'])
+        # check_call(['sudo', 'apt', '-y', 'install', 'python3-pip'])
         check_call(['pip3', 'install', 'numpy'])
         check_call(['pip3', 'install', 'tensorflow==1.14.0'])
+        check_call(['pip3', 'install', 'gym'])
+        check_call(['pip3', 'install', 'stable-baselines[mpi]'])
         check_call(['make'], cwd=src_dir)
         return
 
@@ -48,8 +50,10 @@ def main():
         cmd = [send_src, 'send', args.ip, args.port,
                path.join(args.aurora_save_dir, "client.log"),
                "--pcc-rate-control=python",
+               "-pyprogram={}".format(args.pyprogram),
+               # "-pyprogram=/home/zxxia/.virtualenvs/aurora/bin/python",
                "-pyhelper=udt_plugins.testing.loaded_client",
-               "-pypath=/home/zxxia/PCC-RL/src",
+               "-pypath=../PCC-RL/src",
                "--history-len=10", "--pcc-utility-calc=linear",
                "--model-path={}".format(args.model_path),
                "--save-dir={}".format(args.aurora_save_dir)]

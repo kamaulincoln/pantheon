@@ -36,6 +36,9 @@ def parse_wrapper_args(run_first):
         sender_parser.add_argument(
             '--aurora-save-dir', type=str, default="",
             help='directory to save Aurora\'s logs.')
+        sender_parser.add_argument(
+            '--pyprogram', type=str, default="",
+            help='path to the python interpreter to be used.')
     else:
         sender_parser.add_argument('port', help='port to listen on')
         receiver_parser.add_argument(

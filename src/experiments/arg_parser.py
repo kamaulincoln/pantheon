@@ -138,6 +138,9 @@ def parse_test_local(local):
     local.add_argument(
         '--aurora-save-dir', type=str, default="",
         help='directory to save Aurora\'s logs.')
+    local.add_argument(
+        '--pyprogram', type=str, default="",
+        help='path to the python interpreter to be used.')
 
 
 def parse_test_remote(remote):
