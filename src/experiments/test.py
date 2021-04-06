@@ -47,6 +47,7 @@ class Test(object):
         self.test_end_time = None
         self.model_path = args.model_path  # used to call Aurora later
         self.aurora_save_dir = args.aurora_save_dir  # used to call Aurora later
+        self.pyprogram = args.pyprogram  # used to call Aurora later
 
         # local mode
         if self.mode == 'local':
@@ -426,8 +427,8 @@ class Test(object):
 
             first_cmd = 'tunnel %s python %s receiver %s --aurora-save-dir %s\n' % (
                 tun_id, first_src, port, self.aurora_save_dir)
-            second_cmd = 'tunnel %s python %s sender %s %s --model-path %s --aurora-save-dir %s\n' % (
-                tun_id, second_src, recv_pri_ip, port, self.model_path, self.aurora_save_dir)
+            second_cmd = 'tunnel %s python %s sender %s %s --model-path %s --aurora-save-dir %s --pyprogram %s\n' % (
+                tun_id, second_src, recv_pri_ip, port, self.model_path, self.aurora_save_dir, self.pyprogram)
 
             recv_manager.stdin.write(first_cmd)
             recv_manager.stdin.flush()

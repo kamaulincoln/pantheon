@@ -109,6 +109,14 @@ def parse_test_shared(local, remote, config_args):
         mode.add_argument(
             '--pkill-cleanup', action='store_true', help='clean up using pkill'
             ' (send SIGKILL when necessary) if there were errors during tests')
+        mode.add_argument(
+            '--model-path', type=str, default="", help='path to Aurora models')
+        mode.add_argument(
+            '--aurora-save-dir', type=str, default="",
+            help='directory to save Aurora\'s logs.')
+        mode.add_argument(
+            '--pyprogram', type=str, default="",
+            help='path to the python interpreter to be used.')
 
 
 def parse_test_local(local):
@@ -133,11 +141,6 @@ def parse_test_local(local):
         help='extra arguments to pass to mm-link when running locally. Note '
         'that uplink (downlink) always represents the link from sender to '
         'receiver (from receiver to sender)')
-    local.add_argument(
-        '--model-path', type=str, default="", help='path to Aurora models')
-    local.add_argument(
-        '--aurora-save-dir', type=str, default="",
-        help='directory to save Aurora\'s logs.')
 
 
 def parse_test_remote(remote):
