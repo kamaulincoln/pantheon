@@ -1,7 +1,6 @@
 import os
 import sys
-sys.path.insert(0, '/home/zxxia/pantheon/src/analysis')
-from tunnel_graph import TunnelGraph
+from src.analysis.tunnel_graph import TunnelGraph
 
 
 class Flow():

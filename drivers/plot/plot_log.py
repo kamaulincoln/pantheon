@@ -1,9 +1,23 @@
+import argparse
 import csv
-import pandas as pd
+import sys
 import matplotlib
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
+
+def parse_args():
+    """Parse arguments from the command line."""
+    parser = argparse.ArgumentParser("Test UDR models in simulator.")
+    parser.add_argument("--log-file", type=str, default=[], nargs="+",
+                        help="Path to congestion control.")
+    parser.add_argument("--save-dir", type=str, default="",
+                        help="Path to save.")
+    return parser.parse_args()
+
+args = parse_args()
 
 timestamps = []
 recv_rates = []
@@ -15,7 +29,10 @@ actions = []
 send_start_times = []
 send_end_times = []
 
-with open('test_aurora_new/aurora_emulation_log.csv', 'r') as f:
+if not os.path.exists(args.log_file[0]):
+    sys.exit()
+
+with open(args.log_file[0], 'r') as f:
     reader = csv.DictReader(f)
     for row in reader:
         timestamps.append(float(row['timestamp']))
@@ -50,7 +67,7 @@ axes[0].plot(timestamps, send_rates,
 axes[0].set_xlabel('Time(s)')
 axes[0].set_ylabel('Mbps')
 axes[0].legend()
-axes[0].set_ylim(0,  )
+# axes[0].set_ylim(0,  10)
 axes[0].set_xlim(0, )
 
 axes[1].plot(timestamps, latencies,
@@ -58,7 +75,7 @@ axes[1].plot(timestamps, latencies,
 axes[1].set_xlabel('Time(s)')
 axes[1].set_ylabel('Latency(ms)')
 axes[1].legend()
-axes[1].set_ylim(100, 110)
+# axes[1].set_ylim(0, )
 axes[1].set_xlim(0, )
 
 axes[2].plot(timestamps, loss_rates,
@@ -86,4 +103,4 @@ axes[4].set_xlim(0, )
 # print((send_end_times - send_start_times).tolist())
 
 plt.tight_layout()
-plt.savefig("aurora_emulation.png")
+plt.savefig(os.path.join(args.save_dir, "aurora_emulation.png"))
