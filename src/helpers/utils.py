@@ -194,7 +194,7 @@ def get_git_summary(mode='local', remote_path=None):
                 '--- local git summary ---\n%s\n' % local_git_summary)
             sys.stderr.write(
                 '--- remote git summary ---\n%s\n' % remote_git_summary)
-            sys.exit('Repository differed between local and remote sides')
+            # sys.exit('Repository differed between local and remote sides')
 
     return local_git_summary
 
