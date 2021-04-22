@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from drivers.flow import Flow
-from drivers.utils import pcc_aurora_reward
+from drivers.utils import pcc_aurora_reward, write_json_file
 from src.analysis.tunnel_graph import TunnelGraph
 
 
@@ -58,6 +58,12 @@ def main():
         axes[0].plot(np.array(flow.sending_rate_timestamps) - min(flow.throughput_timestamps[0],
                                                                   flow.sending_rate_timestamps[0]), flow.sending_rate, "o-", ms=2,
                      label=flow.cc + " sending rate {:.3f}Mbps".format(flow.avg_sending_rate))
+
+        # if flow.cc == 'aurora':
+        #     aurora_binwise_log = {
+        #             'send_rate_ts': (np.array(flow.sending_rate_timestamps) - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])).tolist(),
+        #             'send_rate': flow.sending_rate}
+        #     write_json_file(os.path.join(args.save_dir, 'aurora_binwise_log.json'), aurora_binwise_log)
         if isinstance(flow.avg_link_capacity, float):
             axes[0].plot(
                 np.array(flow.link_capacity_timestamps) - min(flow.throughput_timestamps[0],
