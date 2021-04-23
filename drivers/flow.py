@@ -4,10 +4,11 @@ from src.analysis.tunnel_graph import TunnelGraph
 
 
 class Flow():
-    def __init__(self, log_path):
-        self.tunnel_graph = TunnelGraph(log_path)
+    def __init__(self, log_path, ms_per_bin=500):
+        self.tunnel_graph = TunnelGraph(log_path, ms_per_bin=ms_per_bin)
         self.tunnel_graph.parse_tunnel_log()
         self.cc = str(os.path.basename(log_path).split("_")[0])
+        self.ms_per_bin = ms_per_bin
 
     @property
     def link_capacity_timestamps(self):
