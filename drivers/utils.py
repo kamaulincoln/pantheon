@@ -1,4 +1,6 @@
+import json
 import re
+
 import numpy as np
 
 
@@ -32,3 +34,16 @@ def pcc_aurora_reward(throughput, delay, loss):
         loss:
     """
     return 10 * throughput - 1000 * delay - 2000 * loss
+
+
+def read_json_file(filename):
+    """Load json object from a file."""
+    with open(filename, 'r') as f:
+        content = json.load(f)
+    return content
+
+
+def write_json_file(filename, content):
+    """Dump into a json file."""
+    with open(filename, 'w') as f:
+        json.dump(content, f, indent=4)
