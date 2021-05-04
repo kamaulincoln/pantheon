@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 from src.analysis.tunnel_graph import TunnelGraph
 
 
@@ -23,6 +24,7 @@ class Flow():
     @property
     def avg_link_capacity(self):
         return self.tunnel_graph.avg_capacity
+
     @property
     def throughput_timestamps(self):
         """Return througput timestamps in second."""
@@ -64,3 +66,13 @@ class Flow():
     @property
     def loss_rate(self):
         return self.tunnel_graph.loss_rate[1]
+
+
+class Connection:
+    def __init__(self, trace_file):
+        self.datalink = Flow(trace_file)
+        self.acklink = Flow(trace_file.replace('datalink', 'acklink'))
+
+    @property
+    def rtt(self):
+        return (np.min(self.datalink.one_way_delay) + np.mean(self.acklink.one_way_delay)) / 2

@@ -37,6 +37,8 @@ def main():
     if args.option == 'sender':
         cmd = ['iperf', '-Z', 'bbr', '-c', args.ip, '-p', args.port,
                '-t', '75']
+        import time
+        time.sleep(4.5)
         check_call(cmd)
         return
 

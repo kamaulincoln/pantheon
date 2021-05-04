@@ -43,7 +43,8 @@ def main():
         losses = []
         for i in range(5):
             # log_file = "/home/zxxia/Projects/pantheon/test_remote4/run{}/{}_datalink_run1.log".format(i, cc)
-            log_file = "/home/zxxia/Projects/pantheon/test_aurora_in_mahimahi/run{}/{}_datalink_run1.log".format(i, cc)
+            # log_file = "/home/zxxia/Projects/pantheon/test_aurora_in_mahimahi/run{}/{}_datalink_run1.log".format(i, cc)
+            log_file = "/home/zxxia/Projects/pantheon/test_aws_new/run{}/{}_datalink_run1.log".format(i, cc)
             if not os.path.exists(log_file):
                 continue
             flow = Flow(log_file)

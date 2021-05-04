@@ -26,6 +26,8 @@ def main():
     if args.option == 'sender':
         os.environ['LD_LIBRARY_PATH'] = path.join(send_dir)
         cmd = [send_src, args.ip, args.port]
+        import time
+        time.sleep(4.5)
         check_call(cmd)
         return
 

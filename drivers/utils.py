@@ -25,7 +25,7 @@ def learnability_objective_function(throughput, delay):
     # return score
 
 
-def pcc_aurora_reward(throughput, delay, loss):
+def pcc_aurora_reward(throughput, delay, loss, ):
     """Compute PCC Aurora reward.
 
     Args
@@ -33,7 +33,7 @@ def pcc_aurora_reward(throughput, delay, loss):
         delay: second
         loss:
     """
-    return 10 * throughput - 1000 * delay - 2000 * loss
+    return 10 * 50 * throughput / 167 - 1000 * delay - 2000 * loss
 
 
 def read_json_file(filename):
