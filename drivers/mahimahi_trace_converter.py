@@ -25,7 +25,7 @@ def convert(trace_path, save_dir):
             if ts_first is None:
                 ts_first = ts
             if event_type == '-' and nbytes == 1500:
-                outf.write(str(int(round(ts - ts_first)))+'\n')
+                outf.write(str(int(round(ts)))+'\n')
 
 
 for scenario in scenarios:
@@ -43,8 +43,6 @@ for scenario in scenarios:
 
         for trace_path in target_logs:
             print(trace_path)
-            import pdb
-            pdb.set_trace()
             if not os.path.exists(out_link_dir):
                 os.makedirs(out_link_dir)
             print(out_link_dir)

@@ -2,6 +2,7 @@ import os
 import sys
 import numpy as np
 from src.analysis.tunnel_graph import TunnelGraph
+from drivers.utils import pcc_aurora_reward, write_json_file
 
 
 class Flow():
@@ -76,3 +77,18 @@ class Connection:
     @property
     def rtt(self):
         return (np.min(self.datalink.one_way_delay) + np.mean(self.acklink.one_way_delay)) / 2
+
+    def reward(self, avg_bw=None):
+        if avg_bw is None:
+            avg_bw = np.mean(
+                [val for ts, val in
+                 zip(self.datalink.link_capacity_timestamps,
+                     self.datalink.link_capacity)
+                 if ts >= min(self.datalink.throughput_timestamps[0],
+                              self.datalink.sending_rate_timestamps[0])])
+        reward = pcc_aurora_reward(
+            self.datalink.avg_throughput / avg_bw,  # * 1e6 / 8 / 1500,
+            (np.mean(self.datalink.one_way_delay) +
+             np.mean(self.acklink.one_way_delay)) / 1000,
+            self.datalink.loss_rate)
+        return reward

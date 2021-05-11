@@ -49,16 +49,17 @@ def main():
             os.path.dirname(log_file), acklink_log_file))
         # print(flow.one_way_delay_timestamps[:10])
         # print(acklink_flow.one_way_delay_timestamps[:10])
+        avg_bw = np.mean([val for ts, val in zip(flow.link_capacity_timestamps, flow.link_capacity) if ts >= min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])])
         fig, axes = plt.subplots(2, 1, figsize=(6, 8))
         reward = pcc_aurora_reward(
-            50 * flow.avg_throughput/flow.avg_link_capacity ,#* 1e6 / 8 / 1500,
+            flow.avg_throughput/avg_bw,#* 1e6 / 8 / 1500,
             (np.mean(flow.one_way_delay) +
              np.mean(acklink_flow.one_way_delay)) / 1000,
             flow.loss_rate)
-# - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])
-        axes[0].plot(np.array(flow.throughput_timestamps) , flow.throughput,
+#
+        axes[0].plot(np.array(flow.throughput_timestamps) - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]), flow.throughput,
                      "o-", ms=2, label=flow.cc + " throughput {:.3f}Mbps".format(flow.avg_throughput))
-        axes[0].plot(np.array(flow.sending_rate_timestamps) , flow.sending_rate, "o-", ms=2,
+        axes[0].plot(np.array(flow.sending_rate_timestamps)- min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]) , flow.sending_rate, "o-", ms=2,
                      label=flow.cc + " sending rate {:.3f}Mbps".format(flow.avg_sending_rate))
 
         # if flow.cc == 'aurora':
@@ -69,17 +70,17 @@ def main():
  # - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])
         if isinstance(flow.avg_link_capacity, float):
             axes[0].plot(
-                np.array(flow.link_capacity_timestamps), flow.link_capacity, "o-",
+                np.array(flow.link_capacity_timestamps)- min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]), flow.link_capacity, "o-",
                 label="Link bandwidth avg {:.3f}Mbps".format(flow.avg_link_capacity))
 
             # for x, y, val in zip(np.array(flow.link_capacity_timestamps) - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]), flow.link_capacity, flow.link_capacity):
             #     axes[0].annotate(str(round(val, 2)), (x, y))
 
-        if args.trace_file:
-            trace = Flow(args.trace_file)
-            axes[0].plot(
-                np.array(trace.throughput_timestamps), trace.throughput, "o-",
-                label="Trace Link bandwidth avg {:.3f}Mbps".format(np.mean(trace.throughput)))
+        # if args.trace_file:
+        #     trace = Flow(args.trace_file)
+        #     axes[0].plot(
+        #         np.array(trace.throughput_timestamps), trace.throughput, "o-",
+        #         label="Trace Link bandwidth avg {:.3f}Mbps".format(np.mean(trace.throughput)))
 
         axes[0].set_xlabel("Second")
         axes[0].set_ylabel("Mbps")
@@ -89,7 +90,7 @@ def main():
         axes[0].set_xlim(0, )
 
         axes[1].plot(
-            np.array(flow.one_way_delay_timestamps) ,
+            np.array(flow.one_way_delay_timestamps)- min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]) ,
             (np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)), "o-", ms=2,
             label=flow.cc + " RTT avg {:.3f}ms".format(
                 np.mean(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)))

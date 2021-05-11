@@ -33,7 +33,7 @@ def pcc_aurora_reward(throughput, delay, loss, ):
         delay: second
         loss:
     """
-    return 10 * 50 * throughput / 167 - 1000 * delay - 2000 * loss
+    return 10 * 50 * throughput  - 1000 * delay - 2000 * loss
 
 
 def read_json_file(filename):
@@ -47,3 +47,6 @@ def write_json_file(filename, content):
     """Dump into a json file."""
     with open(filename, 'w') as f:
         json.dump(content, f, indent=4)
+
+def compute_std_of_mean(data):
+    return np.std(data) / np.sqrt(len(data))

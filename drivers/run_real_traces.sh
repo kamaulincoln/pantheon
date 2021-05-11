@@ -4,7 +4,7 @@
 
 
 set -e
-root=/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new
+root=/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces
 trace_root=/home/zxxia/Projects/pantheon/data/
 save_dir=results/test_real_traces
 
@@ -34,14 +34,15 @@ for scene in cellular; do # wireless ethernet; do
     for link in ${links}; do
         link_name=$(basename $link)
 # [[ ${link_name} != *"36"* ]] &&
+        # if [[ ${link_name} != *"AWS-Brazil-2"* ]]; then
         if [[ ${link_name} != *"India"* ]]; then
             continue
         fi
         echo ${link}
         traces=$(ls ${link}*_datalink_run1.log)
         for trace in ${traces}; do
-#&& [[ ${trace} != *"vegas"* ]] && [[ ${trace} != *"cubic"* ]]
-            if [[ ${trace} != *"bbr"* ]] ; then
+
+            if [[ ${trace} != *"bbr"* ]] && [[ ${trace} != *"vegas"* ]] && [[ ${trace} != *"cubic"* ]]; then
                 continue
             fi
 
@@ -103,9 +104,9 @@ for scene in cellular; do # wireless ethernet; do
             #     ${save_root}/${scene}/${link_name}/${run_name}/cubic_packet_log.csv \
             #     --save-dir ${save_root}/${scene}/${link_name}/${run_name}/  \
             #     --trace-file ${trace}
-        break
+        # break
         done
-        break
+        # break
     done
-    break
+    # break
 done
