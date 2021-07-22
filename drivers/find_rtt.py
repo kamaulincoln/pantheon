@@ -10,6 +10,9 @@ def parse_args():
     return parser.parse_args()
 
 args = parse_args()
-conn = Connection(args.trace_file)
 
-print(int(round(conn.rtt)))
+try:
+    conn = Connection(args.trace_file)
+    print(int(round(conn.rtt)))
+except:
+    print(-1)
