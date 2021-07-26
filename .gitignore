@@ -126,5 +126,8 @@ Session.vim
 .netrwhist
 *~
 
+# folder containing coc local settings
+.vim
+
 # Auto-generated tag files
 tags

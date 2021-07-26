@@ -13,6 +13,6 @@ args = parse_args()
 
 try:
     conn = Connection(args.trace_file)
-    print(int(round(conn.rtt)))
+    print(int(round(conn.min_one_way_delay)))
 except:
     print(-1)

@@ -80,6 +80,11 @@ class Flow():
     def loss_rate(self):
         return self.tunnel_graph.loss_rate[1]
 
+    @property
+    def percentile_delay(self):
+        """Return 95 percentile one-way delay in millisecond.(Tail latency)"""
+        return self.tunnel_graph.percentile_delay[1]
+
 
 class Connection:
     """Connection contains an uplink flow and downlink flow."""
@@ -89,8 +94,83 @@ class Connection:
         self.acklink = Flow(trace_file.replace('datalink', 'acklink'))
 
     @property
-    def rtt(self):
-        return (np.min(self.datalink.one_way_delay) + np.min(self.acklink.one_way_delay)) / 2
+    def min_one_way_delay(self):
+        return self.min_rtt / 2
+
+    @property
+    def min_rtt(self):
+        return np.min(self.datalink.one_way_delay) + np.min(self.acklink.one_way_delay)
+
+    @property
+    def link_capacity_timestamps(self):
+        """Return througput timestamps in second."""
+        return self.datalink.link_capacity_timestamps
+
+    @property
+    def link_capacity(self):
+        """Return throuhgput in Mbps."""
+        return self.datalink.link_capacity
+
+    @property
+    def avg_link_capacity(self):
+        return self.datalink.avg_link_capacity
+
+    @property
+    def throughput_timestamps(self):
+        """Return througput timestamps in second."""
+        return self.datalink.throughput_timestamps
+
+    @property
+    def throughput(self):
+        """Return throuhgput in Mbps."""
+        return self.datalink.throughput
+
+    @property
+    def avg_throughput(self):
+        return self.datalink.avg_throughput
+
+    @property
+    def sending_rate_timestamps(self):
+        """Return sending rate timestamps in second."""
+        return self.datalink.sending_rate_timestamps
+
+    @property
+    def sending_rate(self):
+        """Return sending rate in Mbps."""
+        return self.datalink.sending_rate
+
+    @property
+    def avg_sending_rate(self):
+        return self.datalink.avg_sending_rate
+
+    @property
+    def datalink_delay_timestamps(self):
+        """Return datalink's one-way delay timestamps in second."""
+        return self.datalink.one_way_delay_timestamps
+
+    @property
+    def datalink_delay(self):
+        """Return datalink's one-way delay in millisecond."""
+        return self.datalink.one_way_delay
+
+    @property
+    def acklink_delay_timestamps(self):
+        """Return acklink's one-way delay timestamps in second."""
+        return self.acklink.one_way_delay_timestamps
+
+    @property
+    def acklink_delay(self):
+        """Return acklink's one-way delay in millisecond."""
+        return self.acklink.one_way_delay
+
+    @property
+    def loss_rate(self):
+        return self.datalink.loss_rate
+
+    @property
+    def percentile_rtt(self):
+        """Return 95 percentile one-way delay in millisecond.(Tail latency)"""
+        return self.datalink.percentile_delay + np.mean(self.acklink.one_way_delay)
 
     def reward(self, avg_bw=None):
         if avg_bw is None:
