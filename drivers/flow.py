@@ -26,16 +26,17 @@ class Flow():
 
     @property
     def link_capacity_timestamps(self):
-        """Return througput timestamps in second."""
+        """Return link capacity timestamps in second."""
         return self.tunnel_graph.link_capacity_t
 
     @property
     def link_capacity(self):
-        """Return throuhgput in Mbps."""
+        """Return link capacity in Mbps."""
         return self.tunnel_graph.link_capacity
 
     @property
     def avg_link_capacity(self):
+        """Return average link capacity in Mbps."""
         return self.tunnel_graph.avg_capacity
 
     @property
@@ -50,6 +51,7 @@ class Flow():
 
     @property
     def avg_throughput(self):
+        """Return average throuhgput in Mbps."""
         return self.tunnel_graph.avg_egress[1]
 
     @property
@@ -78,6 +80,7 @@ class Flow():
 
     @property
     def loss_rate(self):
+        """Return loss rate."""
         return self.tunnel_graph.loss_rate[1]
 
     @property
@@ -87,38 +90,47 @@ class Flow():
 
 
 class Connection:
-    """Connection contains an uplink flow and downlink flow."""
+    """Connection contains an uplink flow and a downlink flow."""
 
-    def __init__(self, trace_file):
+    def __init__(self, trace_file, calibrate_timestamps=False):
         self.datalink = Flow(trace_file)
-        self.acklink = Flow(trace_file.replace('datalink', 'acklink'))
+        trace_file_basename = os.path.basename(trace_file)
+        trace_file_dirname = os.path.dirname(trace_file)
+        self.acklink = Flow(os.path.join(
+            str(trace_file_dirname),
+            str(trace_file_basename.replace("datalink", "acklink"))))
+        if calibrate_timestamps:
+            self.t_offset = min(self.datalink.throughput_timestamps[0],
+                                self.datalink.sending_rate_timestamps[0])
+        else:
+            self.t_offset = 0
 
     @property
-    def min_one_way_delay(self):
-        return self.min_rtt / 2
-
-    @property
-    def min_rtt(self):
-        return np.min(self.datalink.one_way_delay) + np.min(self.acklink.one_way_delay)
+    def cc(self):
+        """Return congestion control algorithm of the network connection."""
+        return self.datalink.cc
 
     @property
     def link_capacity_timestamps(self):
         """Return througput timestamps in second."""
-        return self.datalink.link_capacity_timestamps
+        return[ts - self.t_offset for ts in self.datalink.link_capacity_timestamps]
 
     @property
     def link_capacity(self):
-        """Return throuhgput in Mbps."""
+        """Return datalink capacity in Mbps."""
         return self.datalink.link_capacity
 
     @property
     def avg_link_capacity(self):
-        return self.datalink.avg_link_capacity
+        """Return average datalink capacity in Mbps."""
+        return np.mean([val for ts, val in
+                        zip(self.datalink.link_capacity_timestamps,
+                            self.datalink.link_capacity) if ts >= self.t_offset])
 
     @property
     def throughput_timestamps(self):
         """Return througput timestamps in second."""
-        return self.datalink.throughput_timestamps
+        return [ts - self.t_offset for ts in self.datalink.throughput_timestamps]
 
     @property
     def throughput(self):
@@ -127,12 +139,13 @@ class Connection:
 
     @property
     def avg_throughput(self):
+        """Return average throughput in Mbps."""
         return self.datalink.avg_throughput
 
     @property
     def sending_rate_timestamps(self):
         """Return sending rate timestamps in second."""
-        return self.datalink.sending_rate_timestamps
+        return [ts - self.t_offset for ts in self.datalink.sending_rate_timestamps]
 
     @property
     def sending_rate(self):
@@ -141,12 +154,13 @@ class Connection:
 
     @property
     def avg_sending_rate(self):
+        """Return average sending rate in Mbps."""
         return self.datalink.avg_sending_rate
 
     @property
     def datalink_delay_timestamps(self):
         """Return datalink's one-way delay timestamps in second."""
-        return self.datalink.one_way_delay_timestamps
+        return [ts - self.t_offset for ts in self.datalink.one_way_delay_timestamps]
 
     @property
     def datalink_delay(self):
@@ -156,7 +170,7 @@ class Connection:
     @property
     def acklink_delay_timestamps(self):
         """Return acklink's one-way delay timestamps in second."""
-        return self.acklink.one_way_delay_timestamps
+        return [ts - self.t_offset for ts in self.acklink.one_way_delay_timestamps]
 
     @property
     def acklink_delay(self):
@@ -165,7 +179,38 @@ class Connection:
 
     @property
     def loss_rate(self):
+        """Return packet loss rate of the connection."""
         return self.datalink.loss_rate
+
+    @property
+    def min_one_way_delay(self):
+        """Return the estimate of minimum of one way delay.
+
+        Used to extract min one-way delay from real trace to set delay in Mahimahi.
+        """
+        return self.min_rtt / 2
+
+    @property
+    def min_rtt(self):
+        """Return miniumum RTT of the connection in millisecond."""
+        return np.min(self.datalink.one_way_delay) + np.min(self.acklink.one_way_delay)
+
+    @property
+    def rtt_timestamps(self):
+        """Return RTT timestamps of the connection in millisecond."""
+        return self.datalink_delay_timestamps
+
+    @property
+    def rtt(self):
+        """Return RTT of the connection in millisecond."""
+        avg_acklink_delay = np.mean(self.acklink.one_way_delay)
+        rtt = [val + avg_acklink_delay for val in self.datalink.one_way_delay]
+        return rtt
+
+    @property
+    def avg_rtt(self):
+        """Return average RTT of the connection in millisecond."""
+        return np.mean(self.datalink.one_way_delay) + np.mean(self.acklink.one_way_delay)
 
     @property
     def percentile_rtt(self):

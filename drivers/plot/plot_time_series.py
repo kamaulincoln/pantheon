@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 import argparse
+import csv
 import os
 
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import numpy as np
 
+from drivers.flow import Connection
 from drivers.utils import pcc_aurora_reward
-from drivers.flow import Flow, Connection
 
 
 def parse_args():
@@ -20,115 +20,117 @@ def parse_args():
                         help="Path to congestion control.")
     parser.add_argument("--save-dir", type=str, default="",
                         help="Path to save.")
+    parser.add_argument("--summary-path", type=str, default="",
+                        help="Full path to a summary file.")
     return parser.parse_args()
+
+
+class SummaryManager:
+
+    field_names = ["flow", "trace_avg_bw", "trace_min_rtt",
+                   "aurora_tput", "aurora_lat", "aurora_tail_lat",
+                   "aurora_loss", "aurora_reward", "aurora_normalized_reward",
+                   "bbr_tput", "bbr_lat", "bbr_tail_lat", "bbr_loss",
+                   "bbr_reward", "bbr_normalized_reward",
+                   "cubic_tput", "cubic_lat", "cubic_tail_lat", "cubic_loss",
+                   "cubic_reward", "cubic_normalized_reward",
+                   "vivace_tput", "vivace_lat", "vivace_tail_lat",
+                   "vivace_loss", "vivace_reward", "vivace_normalized_reward"]
+
+    def __init__(self, summary_path):
+
+        is_file_exist = not os.path.exists(summary_path)
+        self.sum_f = open(summary_path, 'a', 1)
+        self.writer = csv.DictWriter(self.sum_f, fieldnames=self.field_names,
+                                     lineterminator='\n')
+        if is_file_exist:
+            self.writer.writeheader()
+        self.row2write = {}
+
+    def add_trace_info(self, trace_file, avg_bw, min_rtt):
+        self.row2write['flow'] = trace_file
+        self.row2write['trace_avg_bw'] = avg_bw
+        self.row2write['trace_min_rtt'] = min_rtt
+
+    def add_cc_perf(self, cc, tput, avg_lat, tail_lat, loss, reward,
+                    normalized_reward):
+        self.row2write['{}_tput'.format(cc)] = tput
+        self.row2write['{}_lat'.format(cc)] = avg_lat
+        self.row2write['{}_tail_lat'.format(cc)] = tail_lat
+        self.row2write['{}_loss'.format(cc)] = loss
+        self.row2write['{}_reward'.format(cc)] = reward
+        self.row2write['{}_normalized_reward'.format(cc)] = normalized_reward
+
+    def writerow(self):
+        self.writer.writerow(self.row2write)
+        self.row2write = {}
+
+    def close(self):
+        self.sum_f.close()
 
 
 def main():
     args = parse_args()
+    summary_mngr = SummaryManager(args.summary_path)
     for log_idx, log_file in enumerate(args.log_file):
-        # print(log_file)
         if not os.path.exists(log_file):
-            if log_idx == 0:
-                print "{},,,,,".format(os.path.dirname(log_file)),
             continue
         try:
-            flow = Flow(log_file)
-            acklink_log_file = os.path.basename(
-                log_file).replace("datalink", "acklink")
-            acklink_flow = Flow(os.path.join(
-                os.path.dirname(log_file), acklink_log_file))
+            conn = Connection(log_file)
         except RuntimeError:
             return
-        # avg_bw = np.mean([val for ts, val in zip(flow.link_capacity_timestamps, flow.link_capacity) if ts >= min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])])
-        fig, axes = plt.subplots(2, 1, figsize=(6, 8))
-        reward = pcc_aurora_reward(
-            # flow.avg_throughput/avg_bw,#* 1e6 / 8 / 1500,
-            flow.avg_throughput * 1e6 / 8 / 1500,
-            (np.mean(flow.one_way_delay) +
-             np.mean(acklink_flow.one_way_delay)) / 1000,
-            flow.loss_rate)
-
-        # t_offset = min(flow.throughput_timestamps[0],
-        #                flow.sending_rate_timestamps[0])
-        t_offset = 0
-        t_max = 40  # max(flow.throughput_timestamps[-1], flow.sending_rate_timestamps[-1],
-                    #flow.one_way_delay_timestamps[-1]) - t_offset
-
-        axes[0].plot(np.array(flow.throughput_timestamps) - t_offset,
-                     flow.throughput, "o-", ms=2,
-                     label=flow.cc + " throughput {:.3f}Mbps".format(
-                         flow.avg_throughput))
-        axes[0].plot(np.array(flow.sending_rate_timestamps) - t_offset,
-                     flow.sending_rate, "o-", ms=2,
-                     label=flow.cc + " sending rate {:.3f}Mbps".format(
-                         flow.avg_sending_rate))
-
-        # if flow.cc == 'aurora':
-        #     aurora_binwise_log = {
-        #             'send_rate_ts': (np.array(flow.sending_rate_timestamps) - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])).tolist(),
-        #             'send_rate': flow.sending_rate}
-        #     write_json_file(os.path.join(args.save_dir, 'aurora_binwise_log.json'), aurora_binwise_log)
- # - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0])
-        if isinstance(flow.avg_link_capacity, float):
-            axes[0].plot(
-                np.array(flow.link_capacity_timestamps) - t_offset,
-                flow.link_capacity, "o-",
-                label="Link bandwidth avg {:.3f}Mbps".format(flow.avg_link_capacity))
-
-            # for x, y, val in zip(np.array(flow.link_capacity_timestamps) - min(flow.throughput_timestamps[0], flow.sending_rate_timestamps[0]), flow.link_capacity, flow.link_capacity):
-            #     axes[0].annotate(str(round(val, 2)), (x, y))
-
         if args.trace_file:
             trace = Connection(args.trace_file)
-            min_rtt = trace.min_rtt
+            trace_min_rtt = trace.min_rtt
         else:
-            min_rtt = -1
-        #     trace = Flow(args.trace_file)
-        #     axes[0].plot(
-        #         np.array(trace.throughput_timestamps), trace.throughput, "o-",
-        #         label="Trace Link bandwidth avg {:.3f}Mbps".format(np.mean(trace.throughput)))
+            trace_min_rtt = -1
+
+        fig, axes = plt.subplots(2, 1, figsize=(6, 8))
+        avg_bw = conn.avg_link_capacity
+
+        summary_mngr.add_trace_info(os.path.dirname(log_file), avg_bw, trace_min_rtt)
+        reward = pcc_aurora_reward(
+            conn.avg_throughput * 1e6 / 8 / 1500,
+            conn.avg_rtt / 1000, conn.loss_rate)
+        normalized_reward = pcc_aurora_reward(
+            conn.avg_throughput * 1e6 / 8 / 1500, conn.avg_rtt / 1000,
+            conn.loss_rate, avg_bw * 1e6 / 8 / 1500)
+
+        summary_mngr.add_cc_perf(conn.cc, conn.avg_throughput, conn.avg_rtt,
+                                 conn.percentile_rtt, conn.loss_rate, reward,
+                                 normalized_reward)
+
+        # max(flow.throughput_timestamps[-1], flow.sending_rate_timestamps[-1],
+        t_max = 40
+
+        axes[0].plot(conn.throughput_timestamps, conn.throughput, "o-", ms=2,
+                     label=conn.cc + " throughput {:.3f}Mbps".format(
+                         conn.avg_throughput))
+        axes[0].plot(conn.sending_rate_timestamps, conn.sending_rate, "o-",
+                     ms=2, label=conn.cc + " sending rate {:.3f}Mbps".format(
+                         conn.avg_sending_rate))
+
+        if isinstance(conn.avg_link_capacity, float):
+            axes[0].plot(conn.link_capacity_timestamps, conn.link_capacity,
+                         "o-", label="Link bandwidth avg {:.3f}Mbps".format(
+                             conn.avg_link_capacity))
 
         axes[0].set_xlabel("Second")
         axes[0].set_ylabel("Mbps")
-        axes[0].set_title(flow.cc + " loss = {:.4f}, reward = {:.3f}".format(
-            flow.loss_rate, reward))
+        axes[0].set_title(conn.cc + " loss = {:.4f}, reward = {:.3f}".format(
+            conn.loss_rate, reward))
         axes[0].legend()
         axes[0].set_xlim(0, t_max)
 
-        axes[1].plot(
-            np.array(flow.one_way_delay_timestamps) - t_offset,
-            (np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)),
-            "o-", ms=2,
-            label=flow.cc + " RTT avg {:.3f}ms, trace minRtt {:.3f}ms".format(
-                np.mean(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay),
-                min_rtt))
+        axes[1].plot(conn.rtt_timestamps, conn.rtt, "o-", ms=2,
+                     label=conn.cc + " RTT avg {:.3f}ms, trace minRtt {:.3f}ms".format(
+                         conn.avg_rtt, trace_min_rtt))
         axes[1].set_xlabel("Second")
         axes[1].set_ylabel("Millisecond")
-        axes[1].set_title(flow.cc + " loss = {:.4f}, reward = {:.3f}".format(
-            flow.loss_rate, reward))
+        axes[1].set_title(conn.cc + " loss = {:.4f}, reward = {:.3f}".format(
+            conn.loss_rate, reward))
         axes[1].legend()
         axes[1].set_xlim(0, t_max)
-        # print("{} delay {}ms, througput {}mbps, loss_rate {}, "
-        #       "sending rate {}mbps, reward {}".format(
-        #           log_file, np.mean(flow.one_way_delay) +
-        #           np.mean(acklink_flow.one_way_delay),
-        #           flow.avg_throughput, flow.loss_rate, flow.avg_sending_rate, reward))
-        if log_idx == 0:
-            print "{},{},{},{},{},".format(
-                os.path.dirname(log_file),
-                np.mean(flow.throughput),
-                np.mean(np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)),
-                flow.loss_rate, reward),
-        elif log_idx == len(args.log_file) - 1:
-            print "{},{},{},{},".format(
-                np.mean(flow.throughput),
-                np.mean(np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)),
-                flow.loss_rate, reward)
-        else:
-            print "{},{},{},{},".format(
-                np.mean(flow.throughput),
-                np.mean(np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay)),
-                flow.loss_rate, reward),
 
         # noises = sorted(np.array(flow.one_way_delay)+np.mean(acklink_flow.one_way_delay) - 100)
         # cdf = np.array([i/float(len(noises)) for i in range(len(noises))])
@@ -143,9 +145,12 @@ def main():
         # axes[2].set_ylim(0, 1)
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_dir,
-                    "{}_time_series.png".format(flow.cc)))
+                    "{}_time_series.png".format(conn.cc)))
 
         plt.close()
+
+    summary_mngr.writerow()
+    summary_mngr.close()
 
 
 if __name__ == "__main__":
