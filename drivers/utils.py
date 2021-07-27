@@ -25,15 +25,21 @@ def learnability_objective_function(throughput, delay):
     # return score
 
 
-def pcc_aurora_reward(throughput, delay, loss, ):
+def pcc_aurora_reward(throughput, delay, loss, avg_bw=None):
     """Compute PCC Aurora reward.
+
+    Return Aurora paper reward if avg_bw is None. Otherwise, return normalized
+    reward.
 
     Args
         throughput: packets per second
         delay: second
         loss:
     """
-    return 10 * 50 * throughput  - 1000 * delay - 2000 * loss
+    if avg_bw is None:
+        return 10 * throughput  - 1000 * delay - 2000 * loss
+    # 50 packets per second = 0.6Mbps
+    return 10 * 50 * throughput / avg_bw - 1000 * delay - 2000 * loss
 
 
 def read_json_file(filename):
