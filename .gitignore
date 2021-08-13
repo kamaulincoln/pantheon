@@ -131,3 +131,7 @@ Session.vim
 
 # Auto-generated tag files
 tags
+
+# folders containing results and data
+results
+data

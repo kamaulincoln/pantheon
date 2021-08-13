@@ -32,28 +32,42 @@ class SummaryManager:
                    "aurora_loss", "aurora_reward", "aurora_normalized_reward",
                    "bbr_tput", "bbr_lat", "bbr_tail_lat", "bbr_loss",
                    "bbr_reward", "bbr_normalized_reward",
+                   "copa_tput", "copa_lat", "copa_tail_lat", "copa_loss",
+                   "copa_reward", "copa_normalized_reward",
                    "cubic_tput", "cubic_lat", "cubic_tail_lat", "cubic_loss",
                    "cubic_reward", "cubic_normalized_reward",
                    "vivace_tput", "vivace_lat", "vivace_tail_lat",
-                   "vivace_loss", "vivace_reward", "vivace_normalized_reward"]
+                   "vivace_loss", "vivace_reward", "vivace_normalized_reward",
+                   "vivace_loss_tput", "vivace_loss_lat", "vivace_loss_tail_lat",
+                   "vivace_loss_loss", "vivace_loss_reward", "vivace_loss_normalized_reward",
+                   "vivace_latency_tput", "vivace_latency_lat", "vivace_latency_tail_lat",
+                   "vivace_latency_loss", "vivace_latency_reward", "vivace_latency_normalized_reward"]
 
     def __init__(self, summary_path):
+        self.initialized = False
 
         is_file_exist = not os.path.exists(summary_path)
+        if not summary_path:
+            return
         self.sum_f = open(summary_path, 'a', 1)
         self.writer = csv.DictWriter(self.sum_f, fieldnames=self.field_names,
                                      lineterminator='\n')
         if is_file_exist:
             self.writer.writeheader()
         self.row2write = {}
+        self.initialized = True
 
     def add_trace_info(self, trace_file, avg_bw, min_rtt):
+        if not self.initialized:
+            return
         self.row2write['flow'] = trace_file
         self.row2write['trace_avg_bw'] = avg_bw
         self.row2write['trace_min_rtt'] = min_rtt
 
     def add_cc_perf(self, cc, tput, avg_lat, tail_lat, loss, reward,
                     normalized_reward):
+        if not self.initialized:
+            return
         self.row2write['{}_tput'.format(cc)] = tput
         self.row2write['{}_lat'.format(cc)] = avg_lat
         self.row2write['{}_tail_lat'.format(cc)] = tail_lat
@@ -62,11 +76,19 @@ class SummaryManager:
         self.row2write['{}_normalized_reward'.format(cc)] = normalized_reward
 
     def writerow(self):
-        self.writer.writerow(self.row2write)
+        if not self.initialized:
+            return
+        for k, v in self.row2write.items():
+            if v != "":
+                self.writer.writerow(self.row2write)
+                break
         self.row2write = {}
 
     def close(self):
+        if not self.initialized:
+            return
         self.sum_f.close()
+        self.initialized = False
 
 
 def main():
@@ -76,9 +98,9 @@ def main():
         if not os.path.exists(log_file):
             continue
         try:
-            conn = Connection(log_file)
-        except RuntimeError:
-            return
+            conn = Connection(log_file, calibrate_timestamps=True)
+        except (RuntimeError, ValueError):
+            continue
         if args.trace_file:
             trace = Connection(args.trace_file)
             trace_min_rtt = trace.min_rtt
@@ -94,7 +116,7 @@ def main():
             conn.avg_rtt / 1000, conn.loss_rate)
         normalized_reward = pcc_aurora_reward(
             conn.avg_throughput * 1e6 / 8 / 1500, conn.avg_rtt / 1000,
-            conn.loss_rate, avg_bw * 1e6 / 8 / 1500)
+            conn.loss_rate, avg_bw * 1e6 / 8 / 1500, trace_min_rtt / 1000)
 
         summary_mngr.add_cc_perf(conn.cc, conn.avg_throughput, conn.avg_rtt,
                                  conn.percentile_rtt, conn.loss_rate, reward,
@@ -117,8 +139,8 @@ def main():
 
         axes[0].set_xlabel("Second")
         axes[0].set_ylabel("Mbps")
-        axes[0].set_title(conn.cc + " loss = {:.4f}, reward = {:.3f}".format(
-            conn.loss_rate, reward))
+        axes[0].set_title(conn.cc + " loss={:.4f}, reward={:.3f}, normalized reward={:.3f}".format(
+            conn.loss_rate, reward, normalized_reward))
         axes[0].legend()
         axes[0].set_xlim(0, t_max)
 
@@ -127,8 +149,8 @@ def main():
                          conn.avg_rtt, trace_min_rtt))
         axes[1].set_xlabel("Second")
         axes[1].set_ylabel("Millisecond")
-        axes[1].set_title(conn.cc + " loss = {:.4f}, reward = {:.3f}".format(
-            conn.loss_rate, reward))
+        axes[1].set_title(conn.cc + " loss={:.4f}, reward={:.3f}, normalized reward={:.3f}".format(
+            conn.loss_rate, reward, normalized_reward))
         axes[1].legend()
         axes[1].set_xlim(0, t_max)
 
@@ -145,7 +167,7 @@ def main():
         # axes[2].set_ylim(0, 1)
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_dir,
-                    "{}_time_series.png".format(conn.cc)))
+                    "{}_time_series_30s.png".format(conn.cc)))
 
         plt.close()
 

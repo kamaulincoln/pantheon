@@ -9,8 +9,8 @@ traces_dir = '/home/zxxia/Projects/pantheon/data'
 save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces"
 save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new_logic"
 
-scenarios = ['cellular'] #, 'ethernet', 'wireless']
-target_cc_list = ['bbr', 'cubic', 'vegas', 'indigo', 'ledbat', 'pcc', 'quic', 'sprout', 'taova', 'verus']
+scenarios = ['cellular', 'ethernet'] #, 'wireless']
+target_cc_list = ['bbr', 'cubic', 'vegas', 'indigo', 'ledbat', 'quic'] #'pcc', 'sprout', 'taova',
 
 def convert(trace_path, save_dir):
     filename = os.path.basename(trace_path)

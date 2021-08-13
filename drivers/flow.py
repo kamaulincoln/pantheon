@@ -4,13 +4,29 @@ from src.analysis.tunnel_graph import TunnelGraph
 from drivers.utils import pcc_aurora_reward
 
 
+def extract_cc_name(log_path):
+    """Exact congestion control name from log path.
+
+    Args
+        log_path: path to \\{cc\\}_datalink_run\\{run_id\\}.log or
+                  \\{cc\\}_acklink_run\\{run_id\\}.log
+    """
+    tokens = os.path.basename(log_path).split("_")
+    cc_tokens = []
+    for token in tokens:
+        if token == "datalink" or token == "acklink":
+            break
+        cc_tokens.append(token)
+    return "_".join(cc_tokens)
+
+
 class Flow():
     """One way flow of the network connection."""
 
     def __init__(self, log_path, ms_per_bin=500):
         self.tunnel_graph = TunnelGraph(log_path, ms_per_bin=ms_per_bin)
         self.tunnel_graph.parse_tunnel_log()
-        self.cc = str(os.path.basename(log_path).split("_")[0])
+        self.cc = extract_cc_name(log_path)
         self.ms_per_bin = ms_per_bin
 
         if (1 not in self.tunnel_graph.egress_t or

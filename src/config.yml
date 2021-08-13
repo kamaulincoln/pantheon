@@ -51,6 +51,14 @@ schemes:
     name: PCC-Vivace
     color: blue
     marker: '<'
+  vivace_loss:
+    name: PCC-Vivace-loss
+    color: blue
+    marker: '+'
+  vivace_latency:
+    name: PCC-Vivace-latency
+    color: blue
+    marker: 'o'
   pcc_experimental:
     name: PCC-Expr
     color: olive
