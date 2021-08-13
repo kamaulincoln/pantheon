@@ -3,6 +3,7 @@
 from subprocess import check_call
 
 import arg_parser
+import time
 
 
 def main():
@@ -18,6 +19,7 @@ def main():
         return
 
     if args.option == 'sender':
+        time.sleep(5)
         cmd = ['iperf', '-Z', 'cubic', '-c', args.ip, '-p', args.port,
                '-t', '75']
         check_call(cmd)
