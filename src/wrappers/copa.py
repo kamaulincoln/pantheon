@@ -26,7 +26,9 @@ def main(delta_conf):
 
     if args.option == 'receiver':
         cmd = [recv_src, args.port]
-        check_call(cmd)
+        check_call(cmd,
+                   stdout=open(path.join(args.aurora_save_dir, "copa_receiver_stdout.log"), 'w', 1),
+                   stderr=open(path.join(args.aurora_save_dir, "copa_receiver_stderr.log"), 'w', 1))
         return
 
     if args.option == 'sender':
@@ -38,7 +40,9 @@ def main(delta_conf):
 
         with open(os.devnull, 'w') as devnull:
             # suppress debugging output to stdout
-            check_call(sh_cmd, shell=True, stdout=devnull)
+            check_call(sh_cmd, shell=True,
+                       stdout=open(path.join(args.aurora_save_dir, "copa_sender_stdout.log"), 'w', 1),
+                       stderr=open(path.join(args.aurora_save_dir, "copa_sender_stderr.log"), 'w', 1))
         return
 
 
