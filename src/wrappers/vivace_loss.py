@@ -12,8 +12,8 @@ def main():
     args = arg_parser.receiver_first()
 
     cc_repo = path.join(context.third_party_dir, 'vivace')
-    recv_dir = path.join(cc_repo, 'receiver_debug_original')
-    send_dir = path.join(cc_repo, 'sender_debug_original')
+    recv_dir = path.join(cc_repo, 'receiver_original')
+    send_dir = path.join(cc_repo, 'sender_original')
     recv_src = path.join(recv_dir, 'appserver')
     send_src = path.join(send_dir, 'gradient_descent_pcc_client')
 
