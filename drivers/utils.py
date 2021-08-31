@@ -46,7 +46,8 @@ def pcc_aurora_reward(throughput, delay, loss, avg_bw=None, min_rtt=None):
     elif avg_bw is None and min_rtt is not None:
         return 10 * 50 * throughput - 1000 * delay / min_rtt - 2000 * loss
     else:
-        return 10 * 50 * throughput / avg_bw - 1000 * 0.01 * delay / min_rtt - 2000 * loss
+        # return 10 * 50 * throughput / avg_bw - 1000 * 0.1 * delay / min_rtt - 500 * loss
+        return 10 * 50 * throughput / avg_bw - 1000 * delay - 2000 * loss
 
 
 def read_json_file(filename):

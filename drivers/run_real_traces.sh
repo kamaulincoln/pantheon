@@ -4,9 +4,28 @@
 
 
 set -e
-root=/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces
-trace_root=/home/zxxia/Projects/pantheon/data/
+root=/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new_logic
+trace_root=/home/zxxia/Projects/pantheon/data
 save_dir=results/test_real_traces
+save_dir=results/test_real_traces_original
+save_dir=results/test_real_traces_0613
+save_dir=results/test_real_traces_0629
+save_dir=results/test_real_traces_0701_fix_ending
+save_dir=results/test_real_traces_0701_heuristic
+save_dir=results/test_real_traces_0701_recv_ratio
+save_dir=results/test_real_traces_0701_recv_ratio_1
+# save_dir=results/test_real_traces_0701_recv_ratio_2
+save_dir=results/test_real_traces_0701_recv_ratio_queue50
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt_no_check_ack
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_rtt
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt_small
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt_mid
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt_large
+# save_dir=results/test_real_traces_0701_recv_ratio_queue50_new_vivace
+
+mkdir -p ${save_dir}
 
 # model_path=../../results_0426/udr_7_dims/bo_delay0/model_step_1468800.ckpt
 # model_path=../../results_0430/udr_7_dims/large_bw_long_rtt/model_step_806400.ckpt
@@ -19,94 +38,123 @@ save_dir=results/test_real_traces
 # model_path=../../results_0430/udr_7_dims/bo_delay2/seed_50/model_step_1562400.ckpt
 # model_path=../../results_0430/udr_7_dims/bo_delay3/seed_50/model_step_367200.ckpt
 # model_path=../../results_0430/udr_7_dims/bo_delay4/seed_50/model_step_122400.ckpt
-model_path=models/udr_7_dims/bo_delay5/seed_50/model_step_604800.ckpt
+# model_path=models/udr_7_dims/bo_delay5/seed_50/model_step_604800.ckpt # good model
+model_path=models/udr_large_lossless_recv_ratio/udr_large_lossless/seed_20/model_step_2124000.ckpt # good model
+# model_path=models/udr_small_lossless/seed_20/model_step_187200.ckpt # good model
+# model_path=models/udr_mid_lossless/seed_20/model_step_86400.ckpt # good model
+# model_path=models/udr_large_lossless_recv_ratio/udr_large_lossless/seed_20/model_step_482400.ckpt # good model
+# model_path=models/udr_small_lossless/seed_20/model_step_2124000.ckpt # good model
+# model_path=/home/zxxia/Projects/PCC-RL/icml_paper_model
 # model_path=/home/zxxia/Projects/pantheon/models/udr_7_dims/bo_delay4/seed_50/model_step_122400.ckpt
+# model_path=models/udr_mid_simple_stateless/udr_mid_simple/seed_20/model_step_633600.ckpt # heuristic model
 
 
-# model_path=../../results_0426/udr_7_dims/bo_bw1/model_step_1684800.ckpt
-# model_path=../../results_0415/udr_7_dims/range1/model_step_4262400.ckpt
+# model_path=../../results_0426/udr_7_dims/bo_bw1/model_step_1684800.ckpt model_path=../../results_0415/udr_7_dims/range1/model_step_4262400.ckpt
 # model_path=../../results_0415/udr_7_dims/range0_vary_bw_cont/model_step_1850400.ckpt
-# printf "flow,aurora_tput,aurora_lat,aurora_loss,aurora_reward,cubic_tput,cubic_lat,cubic_loss,cubic_reward,bw_avg,bw_std,t_s_bw,change_freq,bw_range,rtt_avg\n" > ${save_root}/summary.csv
-printf "flow,aurora_tput,aurora_lat,aurora_loss,aurora_reward,cubic_tput,cubic_lat,cubic_loss,cubic_reward,bw_avg,bw_std,t_s_bw,change_freq,bw_range,rtt_avg\n" > ${save_dir}/summary.csv
+summary_path=${save_dir}/summary_ignore_start_effect_copa.csv
+rm -f ${summary_path}
 for scene in cellular; do # wireless ethernet; do
     links=$(ls -d ${root}/${scene}/*/)
     # echo ${links}
     for link in ${links}; do
         link_name=$(basename $link)
-# [[ ${link_name} != *"36"* ]] &&
-        # if [[ ${link_name} != *"AWS-Brazil-2"* ]]; then
-        if [[ ${link_name} != *"India"* ]]; then
-            continue
-        fi
-        echo ${link}
-        traces=$(ls ${link}*_datalink_run1.log)
-        for trace in ${traces}; do
+        traces=$(ls ${link}*_datalink_run*.log)
+        # if [[ ${link_name} == *"China"* ]] || [[ ${link_name} == *"Colombia"* ]]; then
+        #     continue
+        # fi
+        # if [[ ${link_name} != *"California"* ]]; then
+        #     continue
+        # fi
+        # if [[ ${link_name} == *"California"* ]]; then
+        #     continue
+        # fi
+        # if [[ ${link_name} != *"2018-12-10T20-36-AWS-India-1-to-India-cellular-3-runs"* ]]; then
+        #     continue
+        # fi
+        # if [[ ${link_name} == *"2019-08-26T16-05-AWS-California-1-to-Stanford-cellular-3-runs"* ]]; then
+        #     continue
+        # fi
 
-            if [[ ${trace} != *"bbr"* ]] && [[ ${trace} != *"vegas"* ]] && [[ ${trace} != *"cubic"* ]]; then
+        for trace in ${traces}; do
+            echo ${trace}
+            if [[ ${trace} != *"bbr"* ]] && [[ ${trace} != *"vegas"* ]] && [[ ${trace} != *"cubic"* ]] && [[ ${trace} != *"quic"* ]] && [[ ${trace} != *"indigo"* ]] && [[ ${trace} != *"ledbat"* ]]; then
                 continue
             fi
+            # if [[ ${trace} != *"quic"* ]] && [[ ${trace} != *"indigo"* ]] && [[ ${trace} != *"ledbat"* ]]; then
+            #     continue
+            # fi
+            # if [[ ${trace} != *"bbr"* ]] && [[ ${trace} != *"vegas"* ]] && [[ ${trace} != *"cubic"* ]]; then
+            #     continue
+            # fi
+            # if [[ ${trace} != *"cubic"* ]]; then
+            #     continue
+            # fi
+            # if [[ ${trace} == *"bbr"* ]]; then
+            #     continue
+            # fi
 
             run_name=$(basename ${trace} .log)
 
+            echo ${trace}
+            echo ${trace_root}/${scene}/${link_name}/${run_name}.log
             delay=$(python drivers/find_rtt.py --trace-file ${trace_root}/${scene}/${link_name}/${run_name}.log)
             echo ${delay}
- # bbr cubic vivace
-            echo ${trace}
-            src/experiments/test.py local --schemes "cubic" -t 30 \
-                --uplink-trace ${trace} --downlink-trace tests/traces/12mbps \
-                --prepend-mm-cmds "mm-delay ${delay} mm-loss uplink 0.00" \
-                --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10'" \
-                --data-dir ${save_dir}/${scene}/${link_name}/${run_name} \
-                --model-path ${model_path} \
-                --aurora-save-dir ${save_dir}/${scene}/${link_name}/${run_name} \
-                --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
+            if [ ${delay} == -1 ]; then
+                echo Delay is -1 continue
+                continue
+            fi
+            # src/experiments/test.py local --schemes "bbr cubic vivace" -t 30 \
+            #     --uplink-trace ${trace} --downlink-trace tests/traces/12mbps \
+            #     --prepend-mm-cmds "mm-delay ${delay} mm-loss uplink 0.00" \
+            #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=50'" \
+            #     --data-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --model-path ${model_path} \
+            #     --aurora-save-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
+            queue_size=50
+            # src/experiments/test.py local --schemes "vivace_loss vivace_latency" -t 30 \
+            #     --uplink-trace ${trace} --downlink-trace tests/traces/12mbps \
+            #     --prepend-mm-cmds "mm-delay ${delay} mm-loss uplink 0.00" \
+            #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=${queue_size}'" \
+            #     --data-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --model-path ${model_path} \
+            #     --aurora-save-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
+            # src/experiments/test.py local --schemes "copa" -t 30 \
+            #     --uplink-trace ${trace} --downlink-trace tests/traces/12mbps \
+            #     --prepend-mm-cmds "mm-delay ${delay} mm-loss uplink 0.00" \
+            #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=${queue_size}'" \
+            #     --data-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --model-path ${model_path} \
+            #     --aurora-save-dir ${save_dir}/${scene}/${link_name}/${run_name} \
+            #     --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
+            # pkill -KILL iperf
             # src/experiments/test.py local --schemes "aurora" -t 30 \
             #     --uplink-trace ${trace} --downlink-trace tests/traces/12mbps \
             #     --prepend-mm-cmds "mm-delay ${delay} mm-loss uplink 0.00" \
-            #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=10'" \
+            #     --extra-mm-link-args "--uplink-queue=droptail --uplink-queue-args='packets=50'" \
             #     --data-dir ${save_dir}/${scene}/${link_name}/${run_name} \
             #     --model-path ${model_path} \
             #     --aurora-save-dir ${save_dir}/${scene}/${link_name}/${run_name} \
             #     --pyprogram /home/zxxia/.virtualenvs/aurora/bin/python
 
-# python src/analysis/plot.py --data-dir ${save_dir} --schemes "aurora"
-                # ${save_dir}/${scene}/${link_name}/${run_name}/bbr_datalink_run1.log \
-                # ${save_dir}/${scene}/${link_name}/${run_name}/vivace_datalink_run1.log \
+            # python src/analysis/plot.py --data-dir ${save_dir} --schemes "aurora"
+            echo start plot
             python drivers/plot/plot_time_series.py \
                 --trace-file ${trace_root}/${scene}/${link_name}/${run_name}.log \
-                --log-file ${save_dir}/${scene}/${link_name}/${run_name}/aurora_datalink_run1.log \
-                ${save_dir}/${scene}/${link_name}/${run_name}/cubic_datalink_run1.log \
-                --save-dir ${save_dir}/${scene}/${link_name}/${run_name} #>> ${save_dir}/summary.csv
+                --log-file ${save_dir}/${scene}/${link_name}/${run_name}/copa_datalink_run1.log \
+                --summary-path ${summary_path} \
+                --save-dir ${save_dir}/${scene}/${link_name}/${run_name}
+                # ${save_dir}/${scene}/${link_name}/${run_name}/aurora_datalink_run1.log \
+                # ${save_dir}/${scene}/${link_name}/${run_name}/bbr_datalink_run1.log \
+                # ${save_dir}/${scene}/${link_name}/${run_name}/cubic_datalink_run1.log \
+                # ${save_dir}/${scene}/${link_name}/${run_name}/vivace_datalink_run1.log \
+                # ${save_dir}/${scene}/${link_name}/${run_name}/vivace_loss_datalink_run1.log \
+                # ${save_dir}/${scene}/${link_name}/${run_name}/vivace_latency_datalink_run1.log \
             # python drivers/plot/plot_log.py \
-            #     --log-file ${save_dir}/aurora_emulation_log.csv \
-            #     --save-dir ${save_dir}
-# # python /home/zxxia/pantheon/src/analysis/report.py --data-dir exp/ --schemes "aurora cubic"
-# pkill -9 iperf
-            # python evaluate_cubic.py \
-            #     --trace-file ${trace} --loss 0 --queue 10 \
-            #     --save-dir ${save_root}/${scene}/${link_name}/${run_name} &
-            # CUDA_VISIBLE_DEVICES="" python evaluate_aurora.py \
-            #     --trace-file ${trace} \
-            #     --loss 0 \
-            #     --queue 10 \
-            #     --model-path ${model_path} \
-            #     --save-dir ${save_root}/${scene}/${link_name}/${run_name}
-            # # # sleep 1
-            # python ../plot_scripts/plot_time_series.py \
-            #     --trace-file ${trace} \
-            #     --log-file ${save_root}/${scene}/${link_name}/${run_name}/aurora_simulation_log.csv \
-            #     ${save_root}/${scene}/${link_name}/${run_name}/cubic_simulation_log.csv \
-            #     --save-dir ${save_root}/${scene}/${link_name}/${run_name}/
-            #                 #>> ${save_root}/summary.csv
-            #
-            # python ../plot_scripts/plot_packet_log.py \
-            #     --log-file ${save_root}/${scene}/${link_name}/${run_name}/aurora_packet_log.csv \
-            #     ${save_root}/${scene}/${link_name}/${run_name}/cubic_packet_log.csv \
-            #     --save-dir ${save_root}/${scene}/${link_name}/${run_name}/  \
-            #     --trace-file ${trace}
-        # break
+            #     --log-file ${save_dir}/${scene}/${link_name}/${run_name}/aurora_emulation_log.csv \
+            #     --save-dir ${save_dir}/${scene}/${link_name}/${run_name}
+            rm -f tmp/*
         done
-        # break
     done
-    # break
 done

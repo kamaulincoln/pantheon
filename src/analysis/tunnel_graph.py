@@ -64,6 +64,10 @@ class TunnelGraph(object):
 
             if first_ts is None:
                 first_ts = ts
+            # if (ts - first_ts) / 1000 < 10:
+            #     continue
+            # if (ts - first_ts) / 1000 > 30:
+            #     break
 
             bin_id = self.ms_to_bin(ts, first_ts)
 

@@ -96,10 +96,12 @@ def main():
     summary_mngr = SummaryManager(args.summary_path)
     for log_idx, log_file in enumerate(args.log_file):
         if not os.path.exists(log_file):
+            print(log_file, "does not exist!")
             continue
         try:
             conn = Connection(log_file, calibrate_timestamps=True)
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError) as e:
+            print("RuntimeError or ValueError happens", log_file, e)
             continue
         if args.trace_file:
             trace = Connection(args.trace_file)
