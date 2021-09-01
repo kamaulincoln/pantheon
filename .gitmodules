@@ -2,26 +2,32 @@
 	path = third_party/libutp
 	url = https://github.com/bittorrent/libutp.git
 	ignore = dirty
+	update = none
 [submodule "third_party/proto-quic"]
 	path = third_party/proto-quic
 	url = https://github.com/google/proto-quic.git
 	ignore = dirty
+	update = none
 [submodule "third_party/pcc"]
 	path = third_party/pcc
 	url = https://github.com/modong/pcc.git
 	ignore = dirty
+	update = none
 [submodule "third_party/verus"]
 	path = third_party/verus
 	url = https://github.com/yzaki/verus.git
 	ignore = dirty
+	update = none
 [submodule "third_party/webrtc"]
 	path = third_party/webrtc
 	url = https://github.com/StanfordSNR/webrtc.git
 	ignore = dirty
+	update = none
 [submodule "third_party/sprout"]
 	path = third_party/sprout
 	url = https://github.com/keithw/sprout.git
 	ignore = dirty
+	update = none
 [submodule "third_party/pantheon-tunnel"]
 	path = third_party/pantheon-tunnel
 	url = https://github.com/StanfordSNR/pantheon-tunnel.git
@@ -34,6 +40,7 @@
 	path = third_party/fillp
 	url = https://github.com/fillthepipe/fill-the-pipe.git
 	ignore = dirty
+	update = none
 [submodule "third_party/vivace"]
 	path = third_party/vivace
 	url = https://github.com/StanfordSNR/vivace.git
@@ -42,20 +49,24 @@
 	path = third_party/pcc-experimental
 	url = https://github.com/PCCproject/PCC-Uspace.git
 	ignore = dirty
+	update = none
 [submodule "third_party/indigo"]
 	path = third_party/indigo
 	url = https://github.com/StanfordSNR/indigo.git
 	ignore = dirty
+	update = none
 [submodule "third_party/scream-reproduce"]
 	path = third_party/scream-reproduce
 	url = https://github.com/StanfordSNR/scream.git
 	ignore = dirty
+	update = none
 [submodule "third_party/fillp-sheep"]
 	path = third_party/fillp-sheep
 	url = https://github.com/fillthepipe/fillp-sheep.git
 	ignore = dirty
+	update = none
 [submodule "third_party/PCC-Aurora"]
 	path = third_party/aurora
 	url = https://github.com/zxxia/PCC-Uspace.git
 	branch = deep-learning
-    ignore = dirty
+	ignore = dirty
