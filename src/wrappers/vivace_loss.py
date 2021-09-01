@@ -20,6 +20,8 @@ def main():
     if args.option == 'receiver':
         os.environ['LD_LIBRARY_PATH'] = path.join(recv_dir)
         cmd = [recv_src, args.port]
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         check_call(cmd, stdout=open(path.join(args.aurora_save_dir, "vivace_loss_receiver_stdout.log"), 'w', 1),
                         stderr=open(path.join(args.aurora_save_dir, "vivace_loss_receiver_stderr.log"), 'w', 1))
         return
@@ -29,6 +31,8 @@ def main():
         cmd = [send_src, args.ip, args.port, "0"]
         import time
         time.sleep(4.5)
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         check_call(cmd, stdout=open(path.join(args.aurora_save_dir, "vivace_loss_sender_stdout.log"), 'w', 1),
                         stderr=open(path.join(args.aurora_save_dir, "vivace_loss_sender_stderr.log"), 'w', 1))
         return

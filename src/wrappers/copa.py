@@ -25,6 +25,8 @@ def main(delta_conf):
         return
 
     if args.option == 'receiver':
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         cmd = [recv_src, args.port]
         check_call(cmd,
                    stdout=open(path.join(args.aurora_save_dir, "copa_receiver_stdout.log"), 'w', 1),
@@ -38,6 +40,8 @@ def main(delta_conf):
             'num_cycles=1 cctype=markovian delta_conf=%s'
             % (send_src, args.ip, args.port, delta_conf))
 
+        if not os.path.exists(args.aurora_save_dir):
+            os.makedirs(args.aurora_save_dir)
         with open(os.devnull, 'w') as devnull:
             # suppress debugging output to stdout
             check_call(sh_cmd, shell=True,
