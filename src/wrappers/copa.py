@@ -47,5 +47,5 @@ def main(delta_conf):
 
 
 if __name__ == '__main__':
-    main('do_ss:auto:0.1')
+    # main('do_ss:auto:0.1')
     main('do_ss:auto:0.5')
