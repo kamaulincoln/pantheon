@@ -20,6 +20,8 @@ def parse_args():
                         help="Path to congestion control.")
     parser.add_argument("--save-dir", type=str, default="",
                         help="Path to save.")
+    parser.add_argument("--avg-bw", type=float, default=None,
+                        help="average bw in real world.")
     parser.add_argument("--summary-path", type=str, default="",
                         help="Full path to a summary file.")
     return parser.parse_args()
@@ -28,8 +30,16 @@ def parse_args():
 class SummaryManager:
 
     field_names = ["flow", "trace_avg_bw", "trace_min_rtt",
-                   "aurora_tput", "aurora_lat", "aurora_tail_lat",
-                   "aurora_loss", "aurora_reward", "aurora_normalized_reward",
+                   "genet_bbr_tput", "genet_bbr_lat", "genet_bbr_tail_lat",
+                   "genet_bbr_loss", "genet_bbr_reward", "genet_bbr_normalized_reward",
+                   "genet_cubic_tput", "genet_cubic_lat", "genet_cubic_tail_lat",
+                   "genet_cubic_loss", "genet_cubic_reward", "genet_cubic_normalized_reward",
+                   "udr1_tput", "udr1_lat", "udr1_tail_lat",
+                   "udr1_loss", "udr1_reward", "udr1_normalized_reward",
+                   "udr2_tput", "udr2_lat", "udr2_tail_lat",
+                   "udr2_loss", "udr2_reward", "udr2_normalized_reward",
+                   "udr3_tput", "udr3_lat", "udr3_tail_lat",
+                   "udr3_loss", "udr3_reward", "udr3_normalized_reward",
                    "bbr_tput", "bbr_lat", "bbr_tail_lat", "bbr_loss",
                    "bbr_reward", "bbr_normalized_reward",
                    "copa_tput", "copa_lat", "copa_tail_lat", "copa_loss",
@@ -65,15 +75,23 @@ class SummaryManager:
         self.row2write['trace_min_rtt'] = min_rtt
 
     def add_cc_perf(self, cc, tput, avg_lat, tail_lat, loss, reward,
-                    normalized_reward):
+                    normalized_reward, training_name=""):
         if not self.initialized:
             return
-        self.row2write['{}_tput'.format(cc)] = tput
-        self.row2write['{}_lat'.format(cc)] = avg_lat
-        self.row2write['{}_tail_lat'.format(cc)] = tail_lat
-        self.row2write['{}_loss'.format(cc)] = loss
-        self.row2write['{}_reward'.format(cc)] = reward
-        self.row2write['{}_normalized_reward'.format(cc)] = normalized_reward
+        if cc == 'aurora':
+            self.row2write['{}_tput'.format(training_name)] = tput
+            self.row2write['{}_lat'.format(training_name)] = avg_lat
+            self.row2write['{}_tail_lat'.format(training_name)] = tail_lat
+            self.row2write['{}_loss'.format(training_name)] = loss
+            self.row2write['{}_reward'.format(training_name)] = reward
+            self.row2write['{}_normalized_reward'.format(training_name)] = normalized_reward
+        else:
+            self.row2write['{}_tput'.format(cc)] = tput
+            self.row2write['{}_lat'.format(cc)] = avg_lat
+            self.row2write['{}_tail_lat'.format(cc)] = tail_lat
+            self.row2write['{}_loss'.format(cc)] = loss
+            self.row2write['{}_reward'.format(cc)] = reward
+            self.row2write['{}_normalized_reward'.format(cc)] = normalized_reward
 
     def writerow(self):
         if not self.initialized:
@@ -95,6 +113,7 @@ def main():
     args = parse_args()
     summary_mngr = SummaryManager(args.summary_path)
     for log_idx, log_file in enumerate(args.log_file):
+        print(log_file)
         if not os.path.exists(log_file):
             print(log_file, "does not exist!")
             continue
@@ -110,7 +129,11 @@ def main():
             trace_min_rtt = -1
 
         fig, axes = plt.subplots(2, 1, figsize=(6, 8))
-        avg_bw = conn.avg_link_capacity
+        if args.avg_bw:
+            avg_bw = args.avg_bw
+        else:
+            avg_bw = conn.avg_link_capacity
+        print(avg_bw)
 
         summary_mngr.add_trace_info(os.path.dirname(log_file), avg_bw, trace_min_rtt)
         reward = pcc_aurora_reward(
@@ -120,9 +143,15 @@ def main():
             conn.avg_throughput * 1e6 / 8 / 1500, conn.avg_rtt / 1000,
             conn.loss_rate, avg_bw * 1e6 / 8 / 1500, trace_min_rtt / 1000)
 
+        if conn.cc == 'aurora':
+            training_name = os.path.basename(os.path.dirname(log_file))
+        else:
+            training_name = ""
+        print(log_file, conn.cc, training_name)
+
         summary_mngr.add_cc_perf(conn.cc, conn.avg_throughput, conn.avg_rtt,
-                                 conn.percentile_rtt, conn.loss_rate, reward,
-                                 normalized_reward)
+                                     conn.percentile_rtt, conn.loss_rate, reward,
+                                     normalized_reward, training_name)
 
         # max(flow.throughput_timestamps[-1], flow.sending_rate_timestamps[-1],
         t_max = 40
@@ -168,8 +197,12 @@ def main():
         # axes[2].set_xlim(0, )
         # axes[2].set_ylim(0, 1)
         fig.tight_layout()
-        fig.savefig(os.path.join(args.save_dir,
-                    "{}_time_series_30s.png".format(conn.cc)))
+        if conn.cc == 'aurora':
+            fig.savefig(os.path.join(args.save_dir,
+                        "{}_time_series_30s.png".format(training_name)))
+        else:
+            fig.savefig(os.path.join(args.save_dir,
+                        "{}_time_series_30s.png".format(conn.cc)))
 
         plt.close()
 
