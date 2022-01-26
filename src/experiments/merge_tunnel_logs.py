@@ -3,6 +3,7 @@
 import sys
 import argparse
 import heapq
+import os
 
 
 def parse_arguments():
@@ -138,6 +139,10 @@ def single_mode(args):
     recv_log.close()
     send_log.close()
     output_log.close()
+    if 'tmp' in args.ingress_log:
+        os.remove(args.ingress_log)
+    if 'tmp' in args.egress_log:
+        os.remove(args.egress_log)
 
 
 def push_to_heap(heap, index, log_file, init_ts_delta):

@@ -683,6 +683,14 @@ class Test(object):
         cmd += acklink_tun_logs
         call(cmd)
 
+        for filename in datalink_tun_logs:
+            if 'tmp' in filename:
+                os.remove(filename)
+        for filename in acklink_tun_logs:
+            if 'tmp' in filename:
+                os.remove(filename)
+                sys.stderr.write('remove '+ filename + '..................\n')
+
     def run_congestion_control(self):
         if self.flows > 0:
             try:
