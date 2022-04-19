@@ -144,6 +144,20 @@ class Connection:
                             self.datalink.link_capacity) if ts >= self.t_offset])
 
     @property
+    def min_link_capacity(self):
+        """Return average datalink capacity in Mbps."""
+        return min([val for ts, val in
+                        zip(self.datalink.link_capacity_timestamps,
+                            self.datalink.link_capacity) if ts >= self.t_offset])
+
+    @property
+    def max_link_capacity(self):
+        """Return average datalink capacity in Mbps."""
+        return max([val for ts, val in
+                        zip(self.datalink.link_capacity_timestamps,
+                            self.datalink.link_capacity) if ts >= self.t_offset])
+
+    @property
     def throughput_timestamps(self):
         """Return througput timestamps in second."""
         return [ts - self.t_offset for ts in self.datalink.throughput_timestamps]
@@ -257,7 +271,7 @@ class Connection:
         assert len(timestamps) == len(bandwidths)
         ms_t = 0
         for ts, next_ts, bw in zip(timestamps[0:-1], timestamps[1:], bandwidths[0:-1]):
-            pkt_per_ms = bw * 1e6 / 8 / 1500 / 1000
+            pkt_per_ms = max(bw, 0.1) * 1e6 / 8 / 1500 / 1000
 
             ms_cnt = 0
             pkt_cnt = 0

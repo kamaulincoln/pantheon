@@ -19,6 +19,26 @@ def filter_df(df, keywords2filter=[], row_idx_to_filter=[]):
 
     return df
 
+def compute_percentage(aurora_df, baseline_df):
+    # assert len(aurora_df) == len(baseline_df)
+    bbr_cnt = 0
+    cubic_cnt = 0
+    for i in range(len(aurora_df)):
+        # assert os.path.basename(aurora_df.iloc[i]['flow']) == os.path.basename(baseline_df.iloc[i]['flow'])
+        # assert os.path.basename(os.path.dirname(aurora_df.iloc[i]['flow'])) == os.path.basename(os.path.dirname(baseline_df.iloc[i]['flow']))
+        key = os.path.basename(os.path.dirname(aurora_df.iloc[i]['flow'])) + "/" + os.path.basename(aurora_df.iloc[i]['flow'])
+        mask = baseline_df['flow'].str.contains(key)
+
+        if aurora_df.iloc[i]['aurora_normalized_reward'] >= baseline_df[mask].iloc[0]['bbr_normalized_reward']:
+            bbr_cnt+=1
+        if aurora_df.iloc[i]['aurora_normalized_reward'] >= baseline_df[mask].iloc[0]['cubic_normalized_reward']:
+            cubic_cnt+=1
+        # if aurora_df.iloc[i]['aurora_normalized_reward'] >= baseline_df.iloc[i]['bbr_normalized_reward']:
+        #     bbr_cnt+=1
+        # if aurora_df.iloc[i]['aurora_normalized_reward'] >= baseline_df.iloc[i]['cubic_normalized_reward']:
+        #     cubic_cnt+=1
+        # print(aurora_df.iloc[i]['aurora_normalized_reward'], baseline_df.iloc[i]['bbr_normalized_reward'])
+    return bbr_cnt / float(len(aurora_df)), cubic_cnt / float(len(aurora_df))
 
 def main():
 
@@ -42,6 +62,9 @@ def main():
         "test_real_traces_0701_recv_ratio_queue50_fix_send_rate_smooth_rtt",
         "summary_ignore_start_effect.csv"))
 
+    genet_bbr_data = pd.read_csv(os.path.join(
+        ROOT, "emu_real_cellular_traces", "test_3_genet_new", "queue50", 'genet3',
+        "summary_ignore_start_effect.csv"))
     baseline_data = pd.read_csv(os.path.join(
         ROOT, "test_real_traces_0701_recv_ratio_queue50", "summary_ignore_start_effect.csv"))
     # udr_small_data = pd.read_csv(os.path.join(
@@ -66,17 +89,18 @@ def main():
     #
     # baseline_data = pd.read_csv(os.path.join(
     #     ROOT, "test_real_traces_0701_recv_ratio_queue50", "summary_scale_30s.csv"))
-    keywords = ["China", "bbr", ]
+    keywords = ["China", "bbr_datalink", ]
     idx_2_drop = [0, 7]
     udr_small_data = filter_df(udr_small_data, keywords, idx_2_drop)
     udr_mid_data = filter_df(udr_mid_data, keywords, idx_2_drop)
     udr_large_data = filter_df(udr_large_data, keywords, idx_2_drop)
     genet_data = filter_df(genet_data, keywords, idx_2_drop)
+    genet_bbr_data = filter_df(genet_bbr_data, keywords, idx_2_drop)
     baseline_data = filter_df(baseline_data, keywords, idx_2_drop)
 
     print("BBR reward count: {}, Copa reward count: {}, Cubic reward count: {}, "
           "Vivace reward count: {}, UDR1 reward count: {}, "
-          "UDR2 reward count: {}, UDR3 reward count: {}, GENET reward count: {}".format(
+          "UDR2 reward count: {}, UDR3 reward count: {}, GENET reward count: {}, GENET bbr reward count: {}".format(
               len(baseline_data['bbr_normalized_reward']),
               len(baseline_data['copa_normalized_reward']),
               len(baseline_data['cubic_normalized_reward']),
@@ -84,7 +108,8 @@ def main():
               len(udr_small_data["aurora_normalized_reward"]),
               len(udr_mid_data["aurora_normalized_reward"]),
               len(udr_large_data["aurora_normalized_reward"]),
-              len(genet_data["aurora_normalized_reward"])))
+              len(genet_data["aurora_normalized_reward"]),
+              len(genet_bbr_data["aurora_normalized_reward"])))
 
     reward_name = "normalized_reward"
     baseline_data['bbr_{}'.format(reward_name)] = pcc_aurora_reward(
@@ -152,6 +177,13 @@ def main():
         genet_data['trace_avg_bw'] * 1e6 / 8 / 1500,
         genet_data['trace_min_rtt'] / 1000)
 
+    print("udr_small", compute_percentage(udr_small_data, baseline_data))
+    print("udr_mid", compute_percentage(udr_mid_data, baseline_data))
+    print("udr_large", compute_percentage(udr_large_data, baseline_data))
+    print("genet", compute_percentage(genet_data, baseline_data))
+    print("genet_bbr", compute_percentage(genet_bbr_data, baseline_data))
+    import pdb
+    pdb.set_trace()
     baseline_rewards = [baseline_data["bbr_normalized_reward"].mean(),
                         baseline_data["copa_normalized_reward"].mean(),
                         baseline_data["cubic_normalized_reward"].mean(),
@@ -182,14 +214,17 @@ def main():
                        udr_large_data["aurora_normalized_reward"].std(ddof=0) /
                        np.sqrt(len(udr_large_data["aurora_normalized_reward"]))]
 
-    genet_rewards = [genet_data["aurora_normalized_reward"].mean()]
+    genet_rewards = [genet_data["aurora_normalized_reward"].mean(),
+                    genet_bbr_data["aurora_normalized_reward"].mean()]
     genet_reward_errs = [genet_data["aurora_normalized_reward"].std(ddof=0) /
-                         np.sqrt(len(genet_data["aurora_normalized_reward"]))]
+                         np.sqrt(len(genet_bbr_data["aurora_normalized_reward"])),
+                         genet_bbr_data["aurora_normalized_reward"].std(ddof=0) /
+                         np.sqrt(len(genet_bbr_data["aurora_normalized_reward"]))]
 
     # print(baseline_reward_errs)
-    print("baseline rewards:", baseline_rewards)
-    print("udr rewards", udr_rewards)
-    print("genet_rewards", genet_rewards)
+    print("baseline rewards:", baseline_rewards, baseline_reward_errs)
+    print("udr rewards", udr_rewards, udr_reward_errs)
+    print("genet_rewards", genet_rewards, genet_reward_errs)
 
     plt.figure(figsize=(8, 6))
 
@@ -204,7 +239,7 @@ def main():
                       yerr=udr_reward_errs, width=width)
     for bar, pat in zip(udr_bars, ('', '/', '.')):
         bar.set_hatch(pat)
-    genet_bar = ax.bar([5.5], genet_rewards,
+    genet_bar = ax.bar([5.5, 6], genet_rewards,
                        yerr=genet_reward_errs, width=width)
 
     baseline_labels = ["BBR", "Copa", "Cubic", "Vivace-loss", "Vivace-latency"]
@@ -217,7 +252,7 @@ def main():
 
     plt.ylabel("Reward")
 
-    plt.savefig("figs/eval_bars_new.png")
+    # plt.savefig("figs/eval_bars_new_with_genet_bbr.png")
 
 
     print "CC,average throughput,average latency,average tail latency,average loss,reward,normalized_reward"  # type:ignore
@@ -285,7 +320,13 @@ def main():
         genet_data['aurora_loss'].mean(),
         genet_data['aurora_reward'].mean(),
         genet_data['aurora_normalized_reward'].mean())
-
+    print "{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f}".format(
+        'genet_bbr', genet_bbr_data['aurora_tput'].mean(),
+        genet_bbr_data['aurora_lat'].mean(),
+        genet_bbr_data['aurora_tail_lat'].mean(),
+        genet_bbr_data['aurora_loss'].mean(),
+        genet_bbr_data['aurora_reward'].mean(),
+        genet_bbr_data['aurora_normalized_reward'].mean())
 
 if __name__ == "__main__":
     main()
