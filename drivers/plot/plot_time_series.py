@@ -27,7 +27,8 @@ def parse_args():
 
 class SummaryManager:
 
-    field_names = ["flow", "trace_avg_bw", "trace_min_rtt",
+    field_names = ["flow", "trace_min_bw", "trace_max_bw", "trace_avg_bw",
+                   "trace_min_rtt",
                    "aurora_tput", "aurora_lat", "aurora_tail_lat",
                    "aurora_loss", "aurora_reward", "aurora_normalized_reward",
                    "bbr_tput", "bbr_lat", "bbr_tail_lat", "bbr_loss",
@@ -57,10 +58,12 @@ class SummaryManager:
         self.row2write = {}
         self.initialized = True
 
-    def add_trace_info(self, trace_file, avg_bw, min_rtt):
+    def add_trace_info(self, trace_file, avg_bw, min_rtt, min_bw, max_bw):
         if not self.initialized:
             return
         self.row2write['flow'] = trace_file
+        self.row2write['trace_min_bw'] = min_bw
+        self.row2write['trace_max_bw'] = max_bw
         self.row2write['trace_avg_bw'] = avg_bw
         self.row2write['trace_min_rtt'] = min_rtt
 
@@ -94,6 +97,11 @@ class SummaryManager:
 def main():
     args = parse_args()
     summary_mngr = SummaryManager(args.summary_path)
+    if args.trace_file:
+        trace = Connection(args.trace_file)
+        trace_min_rtt = trace.min_rtt
+    else:
+        trace_min_rtt = -1
     for log_idx, log_file in enumerate(args.log_file):
         if not os.path.exists(log_file):
             print(log_file, "does not exist!")
@@ -103,16 +111,14 @@ def main():
         except (RuntimeError, ValueError) as e:
             print("RuntimeError or ValueError happens", log_file, e)
             continue
-        if args.trace_file:
-            trace = Connection(args.trace_file)
-            trace_min_rtt = trace.min_rtt
-        else:
-            trace_min_rtt = -1
 
         fig, axes = plt.subplots(2, 1, figsize=(6, 8))
         avg_bw = conn.avg_link_capacity
+        min_bw = conn.min_link_capacity
+        max_bw = conn.max_link_capacity
 
-        summary_mngr.add_trace_info(os.path.dirname(log_file), avg_bw, trace_min_rtt)
+        summary_mngr.add_trace_info(os.path.dirname(log_file), avg_bw,
+                                    trace_min_rtt, min_bw, max_bw)
         reward = pcc_aurora_reward(
             conn.avg_throughput * 1e6 / 8 / 1500,
             conn.avg_rtt / 1000, conn.loss_rate)
@@ -169,7 +175,8 @@ def main():
         # axes[2].set_ylim(0, 1)
         fig.tight_layout()
         fig.savefig(os.path.join(args.save_dir,
-                    "{}_time_series_30s.png".format(conn.cc)))
+                    "{}_time_series_no_start_effect.png".format(conn.cc)))
+                    # "{}_time_series_no_start_effect_30s.png".format(conn.cc)))
 
         plt.close()
 
