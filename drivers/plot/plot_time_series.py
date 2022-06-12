@@ -202,12 +202,12 @@ def main():
         # axes[2].set_xlim(0, )
         # axes[2].set_ylim(0, 1)
         fig.tight_layout()
-        if conn.cc == 'aurora':
-            fig.savefig(os.path.join(args.save_dir,
-                        "{}_time_series_30s.png".format(training_name)))
-        else:
-            fig.savefig(os.path.join(args.save_dir,
-                        "{}_time_series_30s.png".format(conn.cc)))
+        # if conn.cc == 'aurora':
+        #     fig.savefig(os.path.join(args.save_dir,
+        #                 "{}_time_series_30s.png".format(training_name)))
+        # else:
+        fig.savefig(os.path.join(args.save_dir,
+                    "{}_time_series_30s.png".format(conn.cc)))
 
         plt.close()
 

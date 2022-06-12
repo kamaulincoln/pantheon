@@ -146,6 +146,8 @@ class Connection:
     @property
     def min_link_capacity(self):
         """Return average datalink capacity in Mbps."""
+        if not self.datalink.link_capacity_timestamps or not self.datalink.link_capacity:
+            return None
         return min([val for ts, val in
                         zip(self.datalink.link_capacity_timestamps,
                             self.datalink.link_capacity) if ts >= self.t_offset])
@@ -153,6 +155,8 @@ class Connection:
     @property
     def max_link_capacity(self):
         """Return average datalink capacity in Mbps."""
+        if not self.datalink.link_capacity_timestamps or not self.datalink.link_capacity:
+            return None
         return max([val for ts, val in
                         zip(self.datalink.link_capacity_timestamps,
                             self.datalink.link_capacity) if ts >= self.t_offset])

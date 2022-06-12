@@ -63,7 +63,7 @@ def main():
         ROOT, "emu_real_ethernet_traces", "baselines", "queue500",
         "summary_ignore_start_effect.csv"))
 
-    keywords = ["2020-02-18T09-26-Brazil-to-AWS-Brazil-1-5-runs-3-flows", "bbr","ledbat",  "quic"]
+    keywords = ["2020-02-18T09-26-Brazil-to-AWS-Brazil-1-5-runs-3-flows", "bbr_data","ledbat",  "quic"]
     # keywords = []
     idx_2_drop = [0]
     udr_small_data = filter_df(udr_small_data, keywords, idx_2_drop)
@@ -71,6 +71,7 @@ def main():
     udr_large_data = filter_df(udr_large_data, keywords, idx_2_drop)
     genet_data = filter_df(genet_data, keywords, idx_2_drop)
     baseline_data = filter_df(baseline_data, keywords, idx_2_drop)
+    genet_bbr_data = filter_df(genet_bbr_data, keywords, idx_2_drop)
 
     reward_name = "normalized_reward"
     # reward_name = "reward"
@@ -202,7 +203,7 @@ def main():
                       yerr=udr_reward_errs, width=width)
     for bar, pat in zip(udr_bars, ('', '/', '.')):
         bar.set_hatch(pat)
-    genet_bar = ax.bar([5.5], genet_rewards,
+    genet_bar = ax.bar([5.5, 6], genet_rewards,
                        yerr=genet_reward_errs, width=width)
 
     baseline_labels = ["BBR", "Copa", "Cubic", "Vivace-loss", "Vivace-latency"]
@@ -217,7 +218,7 @@ def main():
     plt.title("Ethernet")
     plt.tight_layout()
 
-    plt.savefig("figs/eval_bars_ethernet_new.png")
+    plt.savefig("figs/eval_bars_ethernet_new_with_genet_bbr.png")
     print "CC,average throughput,average latency,average tail latency,average loss,reawrd,normalized_reward"
     print "{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f}".format(
         'BBR', baseline_data['bbr_tput'].mean(),
@@ -287,6 +288,13 @@ def main():
         genet_data['aurora_reward'].mean(),
         genet_data['aurora_normalized_reward'].mean())
 
+    print "{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f}".format(
+        'genet_bbr', genet_bbr_data['aurora_tput'].mean(),
+        genet_bbr_data['aurora_lat'].mean(),
+        genet_bbr_data['aurora_tail_lat'].mean(),
+        genet_bbr_data['aurora_loss'].mean(),
+        genet_bbr_data['aurora_reward'].mean(),
+        genet_bbr_data['aurora_normalized_reward'].mean())
 
 
 if __name__ == "__main__":

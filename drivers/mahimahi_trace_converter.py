@@ -8,8 +8,11 @@ traces_dir = '/home/zxxia/Projects/pantheon/data'
 # save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new"
 save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces"
 save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new_logic"
+save_dir = "/home/zxxia/Projects/pantheon/data/pantheon_mahimahi_traces_new_logic_above_0.1"
 
-scenarios = ['cellular', 'ethernet'] #, 'wireless']
+# scenarios = ['cellular', 'ethernet'] #, 'wireless']
+# scenarios = ['ethernet'] #, 'wireless']
+scenarios = ['cellular'] #, 'wireless']
 target_cc_list = ['bbr', 'cubic', 'vegas', 'indigo', 'ledbat', 'quic'] #'pcc', 'sprout', 'taova',
 
 def convert(trace_path, save_dir):
@@ -35,7 +38,14 @@ for scenario in scenarios:
     print(scenario)
     for link_dir in glob.glob(os.path.join(traces_dir, scenario, "*")):
         link_name = os.path.basename(link_dir)
-        print(link_name)
+        # print(link_name)
+
+        # if link_name != "2019-06-28T11-29-Mexico-to-AWS-California-2-5-runs-3-flows":
+        #     continue
+           # link_name != "2019-01-25T19-10-India-to-AWS-India-1-5-runs-3-flows" and \
+        # link_name != "2018-01-31T21-28-Mexico-to-AWS-California-2-10-runs-3-flows" and\
+           # link_name != "2018-12-20T04-36-Colombia-to-AWS-Brazil-2-5-runs" and \
+           # link_name != "2019-01-25T19-10-China-to-AWS-Korea-5-runs-3-flows" and\
         if not os.path.isdir(link_dir):
             continue
         out_link_dir = os.path.join(save_dir, scenario, link_name)
